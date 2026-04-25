@@ -1,0 +1,23 @@
+{
+  "overview": "My E-Com is a fully responsive e-commerce website with a homepage, product catalog, product detail pages, shopping cart, about, and contact pages. Powered by a live product API with real data, cart management with persistence, filtering, and a polished design system.",
+  "features": [
+    "Homepage with hero banner, featured products, category section, countdown offer banner, testimonials, and newsletter signup",
+    "Product listing with sidebar filters (category, price, rating, brand), sorting, and responsive grid",
+    "Product detail page with image gallery zoom, color/size selectors, and related products",
+    "Shopping cart with persistent Zustand state, mini cart drawer, and order summary with coupon codes",
+    "About page with team grid, animated stats, and company timeline",
+    "Contact page with validated form and contact info",
+    "Mobile-responsive with sticky header, hamburger menu, and mobile-first layout"
+  ],
+  "category": "ecommerce",
+  "tags": [
+    "ecommerce",
+    "shop",
+    "products",
+    "cart",
+    "react",
+    "tailwind",
+    "zustand"
+  ],
+  "last_updated": "2026-04-25T17:11:58.575Z"
+}

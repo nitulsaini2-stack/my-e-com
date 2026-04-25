@@ -1,0 +1,140 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap");
+@import "./styles/tokens.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-display: var(--font-heading);
+    --font-body: "Inter", sans-serif;
+    --font-mono: "GeistMono", monospace;
+    --radius: 0.5rem;
+
+    --background: 0.98 0.005 280;
+    --foreground: 0.1 0.015 258;
+    --card: 1.0 0 0;
+    --card-foreground: 0.1 0.015 258;
+    --popover: 1.0 0 0;
+    --popover-foreground: 0.1 0.015 258;
+
+    --primary: 0.18 0.04 258;
+    --primary-foreground: 0.98 0 0;
+
+    --secondary: 0.12 0.06 250;
+    --secondary-foreground: 0.98 0 0;
+
+    --muted: 0.94 0.01 280;
+    --muted-foreground: 0.5 0.01 280;
+
+    --accent: 0.54 0.22 12;
+    --accent-foreground: 0.98 0 0;
+
+    --destructive: 0.54 0.22 12;
+    --destructive-foreground: 0.98 0 0;
+
+    --border: 0.91 0.01 280;
+    --input: 0.96 0.01 280;
+    --ring: 0.54 0.22 12;
+
+    --chart-1: 0.54 0.22 12;
+    --chart-2: 0.18 0.04 258;
+    --chart-3: 0.65 0.15 85;
+    --chart-4: 0.72 0.14 125;
+    --chart-5: 0.45 0.18 40;
+
+    --sidebar: 0.18 0.04 258;
+    --sidebar-foreground: 0.98 0 0;
+    --sidebar-primary: 0.98 0 0;
+    --sidebar-primary-foreground: 0.18 0.04 258;
+    --sidebar-accent: 0.54 0.22 12;
+    --sidebar-accent-foreground: 0.98 0 0;
+    --sidebar-border: 0.25 0.03 258;
+    --sidebar-ring: 0.54 0.22 12;
+  }
+
+  .dark {
+    --background: 0.12 0.02 258;
+    --foreground: 0.98 0 0;
+    --card: 0.16 0.02 258;
+    --card-foreground: 0.95 0 0;
+    --popover: 0.2 0.02 258;
+    --popover-foreground: 0.95 0 0;
+
+    --primary: 0.54 0.22 12;
+    --primary-foreground: 0.15 0.02 258;
+
+    --secondary: 0.22 0.02 258;
+    --secondary-foreground: 0.92 0 0;
+    --muted: 0.22 0.02 258;
+    --muted-foreground: 0.6 0 0;
+
+    --accent: 0.65 0.24 12;
+    --accent-foreground: 0.15 0.02 258;
+
+    --destructive: 0.65 0.24 12;
+    --destructive-foreground: 0.15 0.02 258;
+
+    --border: 0.25 0.02 258;
+    --input: 0.25 0.02 258;
+    --ring: 0.65 0.24 12;
+
+    --chart-1: 0.65 0.24 12;
+    --chart-2: 0.65 0.18 260;
+    --chart-3: 0.72 0.14 125;
+    --chart-4: 0.55 0.19 40;
+    --chart-5: 0.68 0.16 85;
+
+    --sidebar: 0.12 0.02 258;
+    --sidebar-foreground: 0.98 0 0;
+    --sidebar-primary: 0.65 0.24 12;
+    --sidebar-primary-foreground: 0.12 0.02 258;
+    --sidebar-accent: 0.22 0.02 258;
+    --sidebar-accent-foreground: 0.92 0 0;
+    --sidebar-border: 0.25 0.02 258;
+    --sidebar-ring: 0.65 0.24 12;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body);
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    color: var(--color-text-primary);
+  }
+}
+
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  @font-face {
+    font-family: "GeistMono";
+    src: url("/assets/fonts/GeistMono.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+  }
+}
