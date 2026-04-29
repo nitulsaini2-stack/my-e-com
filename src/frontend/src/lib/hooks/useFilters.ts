@@ -1,4 +1,4 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useRouter, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
 import type { FilterState } from "../../types";
 
@@ -13,18 +13,33 @@ const DEFAULT_FILTERS: FilterState = {
   discount: [],
 };
 
-function parseArrayParam(value: string | undefined): string[] {
-  if (!value) return [];
+function parseArrayParam(value: unknown): string[] {
+  if (!value || typeof value !== "string") return [];
   return value.split(",").filter(Boolean);
 }
 
-function parseNumberArrayParam(value: string | undefined): number[] {
-  if (!value) return [];
+function parseNumberArrayParam(value: unknown): number[] {
+  if (!value || typeof value !== "string") return [];
   return value.split(",").filter(Boolean).map(Number);
 }
 
+/**
+ * Update URL search params without TanStack Router's strict type system.
+ * Uses the History API directly so no route-level validateSearch types are needed.
+ */
+function pushSearchParams(params: Record<string, string>): void {
+  const url = new URL(window.location.href);
+  // Clear all existing search params
+  url.search = "";
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  window.history.replaceState(null, "", url.toString());
+}
+
 export function useFilters() {
-  const navigate = useNavigate();
+  const router = useRouter();
+  // strict: false lets this hook work on any route without requiring per-route search schema
   const raw = useSearch({ strict: false }) as Record<
     string,
     string | undefined
@@ -57,14 +72,17 @@ export function useFilters() {
       if (next.inStock) params.inStock = "true";
       if (next.discount.length) params.discount = next.discount.join(",");
 
-      void navigate({ to: ".", search: params });
+      pushSearchParams(params);
+      // Invalidate router so useSearch picks up the new URL
+      void router.invalidate();
     },
-    [navigate],
+    [router],
   );
 
   const clearFilters = useCallback(() => {
-    void navigate({ to: ".", search: {} });
-  }, [navigate]);
+    pushSearchParams({});
+    void router.invalidate();
+  }, [router]);
 
   return { filters, setFilters, clearFilters };
 }

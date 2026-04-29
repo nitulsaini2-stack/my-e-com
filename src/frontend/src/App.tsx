@@ -13,6 +13,17 @@ import HomePage from "./pages/HomePage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import ProductsPage from "./pages/ProductsPage";
 
+// Search param validator — allows arbitrary string search params
+function validateSearch(
+  search: Record<string, unknown>,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [k, v] of Object.entries(search)) {
+    if (typeof v === "string") result[k] = v;
+  }
+  return result;
+}
+
 // Root route — must render <Outlet /> so child routes can mount
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -29,6 +40,7 @@ const productsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/products",
   component: ProductsPage,
+  validateSearch,
 });
 
 const productDetailRoute = createRoute({
@@ -41,6 +53,7 @@ const categoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/category/$categorySlug",
   component: CategoryPage,
+  validateSearch,
 });
 
 const cartRoute = createRoute({

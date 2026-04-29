@@ -6,7 +6,11 @@ import { useMemo, useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { ProductFilters } from "../components/product/ProductFilters";
 import { ProductGrid } from "../components/product/ProductGrid";
-import { getCategories, getProductsByCategory } from "../lib/api/products";
+import { categoryToSlug, slugToRawCategory } from "../lib/api/categories";
+import {
+  getCategoriesSync,
+  getProductsByCategorySync,
+} from "../lib/api/products";
 import { useFilters } from "../lib/hooks/useFilters";
 import type { FilterState, Product } from "../types";
 
@@ -25,7 +29,7 @@ function applyFiltersAndSort(
   }
 
   if (filters.rating !== null) {
-    result = result.filter((p) => p.rating.rate >= filters.rating!);
+    result = result.filter((p) => p.rating.rate >= (filters.rating as number));
   }
 
   if (filters.inStock) {
@@ -61,46 +65,49 @@ const SORT_OPTIONS: Array<{ value: FilterState["sortBy"]; label: string }> = [
   { value: "newest", label: "Newest" },
 ];
 
-function formatCategoryName(slug: string): string {
-  return slug
-    .split(/[-_\s]/)
+function capitalize(str: string): string {
+  return str
+    .split(" ")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 }
 
 const CATEGORY_GRADIENTS: Record<string, string> = {
-  electronics:
-    "linear-gradient(135deg, var(--color-primary), var(--color-secondary))",
-  jewelery:
-    "linear-gradient(135deg, var(--color-secondary), var(--color-primary-hover))",
-  "men's clothing":
-    "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))",
-  "women's clothing":
-    "linear-gradient(135deg, var(--color-accent-hover), var(--color-secondary))",
+  electronics: "linear-gradient(135deg, #1e3a5f, #2563eb)",
+  jewelery: "linear-gradient(135deg, #5c3a00, #b45309)",
+  "men's clothing": "linear-gradient(135deg, #1a3a2a, #059669)",
+  "women's clothing": "linear-gradient(135deg, #4a1a4a, #9333ea)",
 };
 
 export default function CategoryPage() {
+  // categorySlug from URL is a slug like "electronics", "mens-clothing", etc.
   const { categorySlug } = useParams({ strict: false }) as {
     categorySlug: string;
   };
+
   const { filters, setFilters } = useFilters();
   const [page, setPage] = useState(1);
 
+  // Convert URL slug → canonical raw category string (e.g. "mens-clothing" → "men's clothing")
+  const rawCategory = slugToRawCategory(categorySlug ?? "");
+  const categoryName = capitalize(rawCategory || categorySlug || "");
+
+  // Synchronous data load — all local, no async needed
   const {
     data: allProducts = [],
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["products", "category", categorySlug],
-    queryFn: () => getProductsByCategory(categorySlug),
-    staleTime: 5 * 60 * 1000,
+    queryKey: ["products", "category", rawCategory],
+    queryFn: () => getProductsByCategorySync(rawCategory),
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!categorySlug,
   });
 
   const { data: allCategories = [] } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-    staleTime: 5 * 60 * 1000,
+    queryKey: ["categories-list"],
+    queryFn: getCategoriesSync,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   const filteredProducts = useMemo(
@@ -114,10 +121,9 @@ export default function CategoryPage() {
     page * PAGE_SIZE,
   );
 
-  const categoryName = formatCategoryName(categorySlug ?? "");
   const heroGradient =
-    CATEGORY_GRADIENTS[(categorySlug ?? "").toLowerCase()] ??
-    "linear-gradient(135deg, var(--color-primary), var(--color-secondary))";
+    CATEGORY_GRADIENTS[rawCategory] ??
+    "linear-gradient(135deg, #1e3a5f, #2563eb)";
 
   function handleSortChange(e: React.ChangeEvent<HTMLSelectElement>) {
     setFilters({
@@ -130,19 +136,12 @@ export default function CategoryPage() {
   return (
     <Layout>
       <div className="min-h-screen bg-background" data-ocid="category.page">
-        {/* Category hero banner */}
+        {/* Category hero banner — no external images, pure gradient */}
         <div
           className="relative text-white"
           style={{ background: heroGradient }}
           data-ocid="category.hero"
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center opacity-10"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80')",
-            }}
-          />
           <div className="relative max-w-[1280px] mx-auto px-4 py-12 md:py-16">
             <nav
               className="flex items-center gap-1.5 text-sm text-white/70 mb-4"
@@ -179,27 +178,32 @@ export default function CategoryPage() {
         </div>
 
         <div className="max-w-[1280px] mx-auto px-4 py-6">
-          {/* Sub-category pills */}
+          {/* Sub-category pills — use categoryToSlug for correct URL params */}
           {allCategories.length > 0 && (
             <div
               className="flex flex-wrap gap-2 mb-6"
               data-ocid="category.sub_category_pills"
             >
-              {allCategories.map((cat) => (
-                <Link
-                  key={cat}
-                  to="/category/$categorySlug"
-                  params={{ categorySlug: cat }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] flex items-center ${
-                    cat === categorySlug
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-card border border-border text-foreground hover:border-primary hover:text-primary"
-                  }`}
-                  data-ocid={`category.pill.${cat.replace(/\s+/g, "_")}`}
-                >
-                  {formatCategoryName(cat)}
-                </Link>
-              ))}
+              {allCategories.map((cat) => {
+                const catSlug = categoryToSlug(cat);
+                const isActive =
+                  catSlug === categorySlug || cat === rawCategory;
+                return (
+                  <Link
+                    key={cat}
+                    to="/category/$categorySlug"
+                    params={{ categorySlug: catSlug }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] flex items-center ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-card border border-border text-foreground hover:border-primary hover:text-primary"
+                    }`}
+                    data-ocid={`category.pill.${catSlug}`}
+                  >
+                    {capitalize(cat)}
+                  </Link>
+                );
+              })}
             </div>
           )}
 

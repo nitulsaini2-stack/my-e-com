@@ -8,7 +8,10 @@ import { Layout } from "../components/layout/Layout";
 import { ProductCard } from "../components/product/ProductCard";
 import { ProductGallery } from "../components/product/ProductGallery";
 import { ProductInfo } from "../components/product/ProductInfo";
-import { getProductById, getProductsByCategory } from "../lib/api/products";
+import {
+  getProductByIdSync,
+  getProductsByCategorySync,
+} from "../lib/api/products";
 
 const MOCK_REVIEWS = [
   {
@@ -132,7 +135,7 @@ function ReviewCard({ review }: { review: MockReview }) {
 }
 
 export default function ProductDetailPage() {
-  const { productId } = useParams({ strict: false });
+  const { productId } = useParams({ strict: false }) as { productId?: string };
 
   const {
     data: product,
@@ -140,13 +143,16 @@ export default function ProductDetailPage() {
     isError,
   } = useQuery({
     queryKey: ["product", productId],
-    queryFn: () => getProductById(productId ?? ""),
+    queryFn: () => (productId ? getProductByIdSync(productId) : null),
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!productId,
   });
 
   const { data: relatedProducts = [] } = useQuery({
     queryKey: ["products-category", product?.category],
-    queryFn: () => getProductsByCategory(product?.category ?? ""),
+    queryFn: () =>
+      product?.category ? getProductsByCategorySync(product.category) : [],
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!product?.category,
   });
 
@@ -175,7 +181,7 @@ export default function ProductDetailPage() {
               Product Not Found
             </h2>
             <p className="text-muted-foreground max-w-sm">
-              This product doesn't exist or may have been removed.
+              This product doesn&apos;t exist or may have been removed.
             </p>
           </div>
           <Link to="/products">

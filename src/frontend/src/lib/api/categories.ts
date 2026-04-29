@@ -1,13 +1,11 @@
 import type { Category } from "../../types";
-import { getCategories } from "./products";
+import { MOCK_CATEGORIES, MOCK_PRODUCTS } from "./mockData";
 
-const categoryImages: Record<string, string> = {
-  electronics: "https://fakestoreapi.com/img/81fAn1SHalL._AC_SX679_.jpg",
-  jewelery:
-    "https://fakestoreapi.com/img/71pWzhdJNwL._AC_UL640_FMwebp_QL65_.jpg",
-  "men's clothing": "https://fakestoreapi.com/img/71YXzeOuslL._AC_UY879_.jpg",
-  "women's clothing": "https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg",
-};
+// Representative product image per category (inline SVG, never external)
+function categoryImage(cat: string): string {
+  const product = MOCK_PRODUCTS.find((p) => p.category === cat);
+  return product?.image ?? "";
+}
 
 function capitalize(str: string): string {
   return str
@@ -16,12 +14,51 @@ function capitalize(str: string): string {
     .join(" ");
 }
 
+/**
+ * Convert a category string to a URL-safe slug.
+ * "electronics"       → "electronics"
+ * "jewelery"          → "jewelery"
+ * "men's clothing"    → "mens-clothing"
+ * "women's clothing"  → "womens-clothing"
+ */
+export function categoryToSlug(cat: string): string {
+  return cat
+    .replace(/'/g, "") // remove apostrophes first
+    .replace(/\s+/g, "-") // spaces → hyphens
+    .toLowerCase();
+}
+
+/**
+ * Convert a URL slug back to the canonical raw category string.
+ * This is the inverse of categoryToSlug.
+ */
+export function slugToRawCategory(slug: string): string {
+  if (!slug) return "";
+
+  // Direct match first (handles "electronics", "jewelery")
+  if (MOCK_CATEGORIES.includes(slug)) return slug;
+
+  // Try all categories and find the one whose slug matches
+  for (const cat of MOCK_CATEGORIES) {
+    if (categoryToSlug(cat) === slug) return cat;
+  }
+
+  // Fallback: replace hyphens with spaces and try
+  const withSpaces = slug.replace(/-/g, " ");
+  const spaceMatch = MOCK_CATEGORIES.find(
+    (c) => c.toLowerCase() === withSpaces.toLowerCase(),
+  );
+  if (spaceMatch) return spaceMatch;
+
+  return slug;
+}
+
 export async function getCategoriesWithImages(): Promise<Category[]> {
-  const categories = await getCategories();
-  return categories.map((cat) => ({
+  return MOCK_CATEGORIES.map((cat) => ({
     id: cat,
     name: capitalize(cat),
-    slug: cat.replace(/ /g, "-"),
-    image: categoryImages[cat] ?? "",
+    slug: categoryToSlug(cat),
+    image: categoryImage(cat),
+    productCount: MOCK_PRODUCTS.filter((p) => p.category === cat).length,
   }));
 }

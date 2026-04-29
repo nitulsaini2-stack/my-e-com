@@ -21777,7 +21777,7 @@ class RouterCore {
               try {
                 Object.assign(
                   validatedSearch,
-                  validateSearch(route.options.validateSearch, {
+                  validateSearch$1(route.options.validateSearch, {
                     ...validatedSearch,
                     ...nextSearch
                   })
@@ -22425,7 +22425,7 @@ class RouterCore {
         const parentSearch = (parentMatch == null ? void 0 : parentMatch.search) ?? next.search;
         const parentStrictSearch = (parentMatch == null ? void 0 : parentMatch._strictSearch) ?? void 0;
         try {
-          const strictSearch = validateSearch(route.options.validateSearch, { ...parentSearch }) ?? void 0;
+          const strictSearch = validateSearch$1(route.options.validateSearch, { ...parentSearch }) ?? void 0;
           return [
             {
               ...parentSearch,
@@ -22597,7 +22597,7 @@ function getInitialRouterState(location2) {
     statusCode: 200
   };
 }
-function validateSearch(validateSearch2, input) {
+function validateSearch$1(validateSearch2, input) {
   if (validateSearch2 == null) return {};
   if ("~standard" in validateSearch2) {
     const result = validateSearch2["~standard"].validate(input);
@@ -22720,7 +22720,7 @@ function applySearchMiddleware({
           try {
             const validatedSearch = {
               ...result,
-              ...validateSearch(route.options.validateSearch, result) ?? void 0
+              ...validateSearch$1(route.options.validateSearch, result) ?? void 0
             };
             return validatedSearch;
           } catch {
@@ -31783,101 +31783,320 @@ function Skeleton({ className, ...props }) {
     }
   );
 }
-const BASE_URL = "https://fakestoreapi.com";
-async function apiGet(path) {
-  const res = await fetch(`${BASE_URL}${path}`);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
-}
-async function apiPost(path, body) {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
-}
-const DISCOUNT_SEEDS = [
-  0,
-  10,
-  15,
-  20,
-  25,
-  30,
-  0,
-  40,
-  0,
-  10,
-  20,
-  0,
-  35,
-  15,
-  0,
-  10,
-  30,
-  20,
-  0,
-  25
-];
-function extractBrand(title) {
-  return title.split(" ")[0];
-}
-function mapProduct(p, index2 = 0) {
-  const discount = DISCOUNT_SEEDS[index2 % DISCOUNT_SEEDS.length];
-  const originalPrice = discount > 0 ? Number.parseFloat((p.price / (1 - discount / 100)).toFixed(2)) : void 0;
-  return {
-    id: p.id,
-    title: p.title,
-    slug: String(p.id),
-    price: p.price,
-    originalPrice,
-    description: p.description,
-    category: p.category,
-    image: p.image,
-    images: [p.image],
-    rating: p.rating,
-    stock: 100,
-    brand: extractBrand(p.title),
-    tags: [p.category],
-    isFeatured: index2 < 8,
-    isNew: index2 % 5 === 0,
-    discount: discount > 0 ? discount : void 0
-  };
-}
-async function getProducts() {
-  const items = await apiGet("/products");
-  return items.map((p, i) => mapProduct(p, i));
-}
-async function getProductById(id) {
-  const item = await apiGet(`/products/${id}`);
-  return mapProduct(item);
-}
-async function getProductsByCategory(category) {
-  const items = await apiGet(
-    `/products/category/${encodeURIComponent(category)}`
+function makeSvgImage(bgColor, icon, label, accentColor = "#ffffff") {
+  const encoded = encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${bgColor}" stop-opacity="1"/>
+      <stop offset="100%" stop-color="${bgColor}" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)" rx="16"/>
+  <text x="50%" y="42%" dominant-baseline="middle" text-anchor="middle" font-size="96" font-family="system-ui">${icon}</text>
+  <text x="50%" y="72%" dominant-baseline="middle" text-anchor="middle" fill="${accentColor}" font-size="22" font-family="system-ui,sans-serif" font-weight="600">${label}</text>
+</svg>`
   );
-  return items.map((p, i) => mapProduct(p, i));
+  return `data:image/svg+xml,${encoded}`;
 }
-async function getCategories() {
-  return apiGet("/products/categories");
+const elec = (icon, label) => makeSvgImage("#1e3a5f", icon, label, "#93c5fd");
+const jwl = (icon, label) => makeSvgImage("#5c3a00", icon, label, "#fcd34d");
+const mens = (icon, label) => makeSvgImage("#1a3a2a", icon, label, "#6ee7b7");
+const womens = (icon, label) => makeSvgImage("#4a1a4a", icon, label, "#f0abfc");
+const MOCK_PRODUCTS = [
+  // ── Electronics ──────────────────────────────────────────────────────────────
+  {
+    id: 1,
+    title: "Apple iPhone 15 Pro Max 256GB Natural Titanium",
+    price: 1199.99,
+    description: "The ultimate iPhone with a titanium design, A17 Pro chip, and pro camera system. Capture stunning photos with 48MP main camera, enjoy ProMotion display at 120Hz, and experience USB 3 speeds.",
+    category: "electronics",
+    image: elec("📱", "iPhone 15 Pro"),
+    rating: { rate: 4.8, count: 2341 }
+  },
+  {
+    id: 2,
+    title: "Samsung 65-inch 4K QLED Smart TV Q80C",
+    price: 1097.99,
+    description: "Experience breathtaking picture quality with Quantum HDR 12x, Neo Quantum Processor 4K, and Object Tracking Sound. Smart TV powered by Tizen OS with built-in Alexa and Google Assistant.",
+    category: "electronics",
+    image: elec("📺", "4K Smart TV"),
+    rating: { rate: 4.5, count: 892 }
+  },
+  {
+    id: 3,
+    title: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+    price: 349.99,
+    description: "Industry-leading noise cancellation with Auto NC Optimizer. Up to 30 hours battery life, speak-to-chat technology, and multipoint connection. Exceptional sound quality with LDAC support.",
+    category: "electronics",
+    image: elec("🎧", "Sony WH-1000XM5"),
+    rating: { rate: 4.7, count: 3105 }
+  },
+  {
+    id: 4,
+    title: "Apple MacBook Pro 14-inch M3 Pro 512GB",
+    price: 1999,
+    description: "Supercharged by M3 Pro chip with up to 18-core GPU. Stunning Liquid Retina XDR display, up to 18 hours battery, and a suite of pro ports. The world's best consumer laptop.",
+    category: "electronics",
+    image: elec("💻", "MacBook Pro M3"),
+    rating: { rate: 4.9, count: 1567 }
+  },
+  {
+    id: 5,
+    title: "Canon EOS R50 Mirrorless Camera with 18-45mm Lens",
+    price: 879.99,
+    description: "24.2MP APS-C sensor, Dual Pixel CMOS AF II for fast, accurate autofocus. Perfect for content creators with vertical video support, 4K movie recording, and built-in Wi-Fi.",
+    category: "electronics",
+    image: elec("📷", "Canon EOS R50"),
+    rating: { rate: 4.6, count: 743 }
+  },
+  {
+    id: 6,
+    title: "iPad Air 11-inch M2 Wi-Fi 256GB Blue",
+    price: 749,
+    description: "Supercharged by the M2 chip, the new iPad Air is more capable than ever. Stunning 11-inch Liquid Retina display, Ultra Wide front camera, and support for Apple Pencil Pro.",
+    category: "electronics",
+    image: elec("📲", "iPad Air M2"),
+    rating: { rate: 4.7, count: 1289 }
+  },
+  {
+    id: 7,
+    title: "Logitech MX Master 3S Wireless Performance Mouse",
+    price: 99.99,
+    description: "8K DPI sensor, ultra-fast MagSpeed electromagnetic scrolling, and quieter clicks. Works on any surface including glass. Connect up to 3 devices seamlessly with Easy-Switch.",
+    category: "electronics",
+    image: elec("🖱️", "MX Master 3S"),
+    rating: { rate: 4.6, count: 4782 }
+  },
+  {
+    id: 8,
+    title: 'LG 27" UltraGear QHD 165Hz Gaming Monitor',
+    price: 349.99,
+    description: "27-inch QHD (2560x1440) IPS display with 165Hz refresh rate and 1ms GTG response time. HDR 400, AMD FreeSync Premium, and NVIDIA G-Sync compatible. Perfect for competitive gaming.",
+    category: "electronics",
+    image: elec("🖥️", "LG UltraGear"),
+    rating: { rate: 4.5, count: 2156 }
+  },
+  // ── Jewelery ─────────────────────────────────────────────────────────────────
+  {
+    id: 9,
+    title: "Tiffany & Co. Classic Diamond Solitaire Ring 0.5ct",
+    price: 2499,
+    description: "The iconic Tiffany Setting solitaire ring crafted in platinum with a brilliant round diamond. A timeless symbol of love and commitment, set with precision to maximize diamond brilliance.",
+    category: "jewelery",
+    image: jwl("💎", "Solitaire Ring"),
+    rating: { rate: 4.9, count: 312 }
+  },
+  {
+    id: 10,
+    title: "Pandora Signature 14K Gold Charm Bracelet",
+    price: 299.99,
+    description: "Authentic Pandora bracelet in 14K gold with signature barrel clasp. Compatible with all Pandora charms. Crafted with exceptional care, perfect for gifting and self-expression.",
+    category: "jewelery",
+    image: jwl("✨", "Gold Bracelet"),
+    rating: { rate: 4.6, count: 987 }
+  },
+  {
+    id: 11,
+    title: "Sterling Silver Turquoise Drop Earrings",
+    price: 49.99,
+    description: "Handcrafted 925 sterling silver earrings with genuine turquoise gemstones. Boho-chic design with secure leverback closure. Hypoallergenic and nickel-free, perfect for sensitive ears.",
+    category: "jewelery",
+    image: jwl("💙", "Drop Earrings"),
+    rating: { rate: 4.4, count: 653 }
+  },
+  {
+    id: 12,
+    title: "14K White Gold Diamond Tennis Bracelet 2ct",
+    price: 1899,
+    description: "Elegant tennis bracelet featuring 28 round brilliant diamonds totaling 2 carats set in 14K white gold. Box clasp with safety closure. A classic piece that works for every occasion.",
+    category: "jewelery",
+    image: jwl("💍", "Tennis Bracelet"),
+    rating: { rate: 4.8, count: 234 }
+  },
+  {
+    id: 13,
+    title: "Rose Gold Personalized Name Necklace 18K",
+    price: 89.99,
+    description: "Custom name necklace in 18K rose gold plated sterling silver. Choose your name or special word in elegant script font. 18-inch chain with 2-inch extender, perfect fit for any neckline.",
+    category: "jewelery",
+    image: jwl("📿", "Name Necklace"),
+    rating: { rate: 4.5, count: 1432 }
+  },
+  // ── Men's Clothing ────────────────────────────────────────────────────────────
+  {
+    id: 14,
+    title: "Levi's 501 Original Straight Fit Jeans Dark Blue",
+    price: 69.99,
+    description: "The original blue jean since 1873. Straight fit with button fly. Made from heavyweight denim with the iconic Levi's leather patch. Available in 28-42 waist and 28-36 inseam.",
+    category: "men's clothing",
+    image: mens("👖", "Levi's 501 Jeans"),
+    rating: { rate: 4.5, count: 5621 }
+  },
+  {
+    id: 15,
+    title: "Ralph Lauren Classic Fit Oxford Polo Shirt White",
+    price: 98.5,
+    description: "Crafted from soft cotton mesh, this iconic polo features the signature embroidered Polo pony. Classic fit with rib-knit collar and cuffs, two-button placket. Machine washable.",
+    category: "men's clothing",
+    image: mens("👕", "Polo Shirt"),
+    rating: { rate: 4.6, count: 3201 }
+  },
+  {
+    id: 16,
+    title: "Nike Therma-FIT ADV Insulated Jacket",
+    price: 149.99,
+    description: "Stay warm without the bulk. Nike Therma-FIT technology pulls sweat away from skin and helps keep you warm and dry. Lightweight insulation, packable design, water-resistant finish.",
+    category: "men's clothing",
+    image: mens("🧥", "Nike Jacket"),
+    rating: { rate: 4.7, count: 1876 }
+  },
+  {
+    id: 17,
+    title: "Patagonia Better Sweater Quarter-Zip Fleece Navy",
+    price: 139,
+    description: "Classic fleece style made from 100% recycled polyester fleece. Flattering athletic fit, stand-up collar, and front zip pocket. Bluesign approved fabric, fair trade certified.",
+    category: "men's clothing",
+    image: mens("🧶", "Patagonia Fleece"),
+    rating: { rate: 4.8, count: 2456 }
+  },
+  {
+    id: 18,
+    title: "Hugo Boss Regular Fit White Dress Shirt",
+    price: 129.99,
+    description: "Classic dress shirt in premium poplin cotton. Regular fit with spread collar, French placket, and single button cuffs. Easy-iron finish keeps you looking sharp all day.",
+    category: "men's clothing",
+    image: mens("👔", "Dress Shirt"),
+    rating: { rate: 4.4, count: 789 }
+  },
+  {
+    id: 19,
+    title: "Adidas Running Shorts 3-Stripes Tech Mesh Black",
+    price: 34.99,
+    description: "Lightweight running shorts with built-in briefs for support and comfort. Quick-dry fabric, 3-stripe detailing, side pockets. Perfect for training, running, or gym sessions.",
+    category: "men's clothing",
+    image: mens("🩳", "Running Shorts"),
+    rating: { rate: 4.3, count: 2134 }
+  },
+  {
+    id: 20,
+    title: "Dockers Men's Classic Slim Fit Chino Pants Khaki",
+    price: 59.99,
+    description: "Smart 360 Flex stretch fabric moves with you throughout the day. Slim fit, flat front, tapered leg. Wrinkle-resistant and easy care. Dress up or down for any occasion.",
+    category: "men's clothing",
+    image: mens("👖", "Chino Pants"),
+    rating: { rate: 4.4, count: 1654 }
+  },
+  // ── Women's Clothing ──────────────────────────────────────────────────────────
+  {
+    id: 21,
+    title: "Zara Floral Wrap Midi Dress Summer Boho",
+    price: 79.9,
+    description: "Flowing midi dress in a beautiful floral print. Wrap-around front with adjustable tie, V-neck, and flutter sleeves. Lightweight woven fabric, perfect for warm weather and holidays.",
+    category: "women's clothing",
+    image: womens("👗", "Floral Midi Dress"),
+    rating: { rate: 4.5, count: 2876 }
+  },
+  {
+    id: 22,
+    title: "Free People We The Free High-Rise Skinny Jeans",
+    price: 98,
+    description: "High-waisted skinny jeans with a flattering cut and stretch fabric for all-day comfort. Five-pocket styling, ankle length, raw hem. Available in multiple washes.",
+    category: "women's clothing",
+    image: womens("👖", "Skinny Jeans"),
+    rating: { rate: 4.6, count: 1932 }
+  },
+  {
+    id: 23,
+    title: "Anthropologie Woven Linen Blazer Cream",
+    price: 148,
+    description: "Relaxed-fit linen blazer with a slightly oversized silhouette. Notched lapels, two button front closure, and flap pockets. Perfect for office to weekend transitions.",
+    category: "women's clothing",
+    image: womens("🧣", "Linen Blazer"),
+    rating: { rate: 4.7, count: 876 }
+  },
+  {
+    id: 24,
+    title: "Lululemon Align High-Rise Yoga Pants 25-inch Black",
+    price: 128,
+    description: "Made with buttery-soft Nulu fabric that feels like a second skin. 4-way stretch, sweat-wicking, and barely-there feel. Ideal for yoga, pilates, or everyday wear.",
+    category: "women's clothing",
+    image: womens("🩱", "Yoga Pants"),
+    rating: { rate: 4.8, count: 6754 }
+  },
+  {
+    id: 25,
+    title: "H&M Oversized Cotton Crewneck Sweatshirt Beige",
+    price: 39.99,
+    description: "Super cozy oversized sweatshirt in soft cotton-blend fabric. Dropped shoulders, ribbed cuffs and hem, front kangaroo pocket. The perfect layering essential for every wardrobe.",
+    category: "women's clothing",
+    image: womens("👚", "Crewneck Sweatshirt"),
+    rating: { rate: 4.3, count: 3421 }
+  },
+  {
+    id: 26,
+    title: "ASOS Satin Cami Top with Lace Trim Blush Pink",
+    price: 29.99,
+    description: "Feminine cami top in luxurious satin fabric with delicate lace trim at neckline and hem. Adjustable spaghetti straps, v-neck, relaxed fit. Wear alone or layered.",
+    category: "women's clothing",
+    image: womens("👙", "Satin Cami Top"),
+    rating: { rate: 4.2, count: 1876 }
+  },
+  {
+    id: 27,
+    title: "Mango Knitted Cardigan with Pockets Camel",
+    price: 69.99,
+    description: "Long knitted cardigan in a cozy oversized fit. Open front, side pockets, and ribbed cuffs. Versatile layering piece that pairs beautifully with both casual and dressy outfits.",
+    category: "women's clothing",
+    image: womens("🧤", "Knitted Cardigan"),
+    rating: { rate: 4.5, count: 2134 }
+  },
+  {
+    id: 28,
+    title: "Urban Outfitters BDG A-Line Mini Skirt Denim Blue",
+    price: 54,
+    description: "Classic denim mini skirt with an A-line silhouette. Button front, five-pocket styling, raw hem. Medium-weight denim with just a touch of stretch for comfort.",
+    category: "women's clothing",
+    image: womens("👗", "Denim Mini Skirt"),
+    rating: { rate: 4.4, count: 987 }
+  }
+];
+const MOCK_CATEGORIES = [
+  "electronics",
+  "jewelery",
+  "men's clothing",
+  "women's clothing"
+];
+function categoryImage(cat) {
+  const product = MOCK_PRODUCTS.find((p) => p.category === cat);
+  return (product == null ? void 0 : product.image) ?? "";
 }
-const categoryImages = {
-  electronics: "https://fakestoreapi.com/img/81fAn1SHalL._AC_SX679_.jpg",
-  jewelery: "https://fakestoreapi.com/img/71pWzhdJNwL._AC_UL640_FMwebp_QL65_.jpg",
-  "men's clothing": "https://fakestoreapi.com/img/71YXzeOuslL._AC_UY879_.jpg",
-  "women's clothing": "https://fakestoreapi.com/img/71z3kpMAYsL._AC_UY879_.jpg"
-};
-function capitalize(str) {
+function capitalize$1(str) {
   return str.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 }
+function categoryToSlug(cat) {
+  return cat.replace(/'/g, "").replace(/\s+/g, "-").toLowerCase();
+}
+function slugToRawCategory(slug) {
+  if (!slug) return "";
+  if (MOCK_CATEGORIES.includes(slug)) return slug;
+  for (const cat of MOCK_CATEGORIES) {
+    if (categoryToSlug(cat) === slug) return cat;
+  }
+  const withSpaces = slug.replace(/-/g, " ");
+  const spaceMatch = MOCK_CATEGORIES.find(
+    (c) => c.toLowerCase() === withSpaces.toLowerCase()
+  );
+  if (spaceMatch) return spaceMatch;
+  return slug;
+}
 async function getCategoriesWithImages() {
-  const categories = await getCategories();
-  return categories.map((cat) => ({
+  return MOCK_CATEGORIES.map((cat) => ({
     id: cat,
-    name: capitalize(cat),
-    slug: cat.replace(/ /g, "-"),
-    image: categoryImages[cat] ?? ""
+    name: capitalize$1(cat),
+    slug: categoryToSlug(cat),
+    image: categoryImage(cat),
+    productCount: MOCK_PRODUCTS.filter((p) => p.category === cat).length
   }));
 }
 const quickLinks = [
@@ -32166,62 +32385,201 @@ const useWishlistStore = create()(
     { name: "my-ecom-wishlist" }
   )
 );
+const CATEGORY_META = {
+  electronics: {
+    emoji: "⚡",
+    gradient: "linear-gradient(135deg, #1e3a5f 0%, #0f2547 100%)",
+    label: "Gadgets & Tech"
+  },
+  jewelery: {
+    emoji: "💎",
+    gradient: "linear-gradient(135deg, #7c4a00 0%, #5c3300 100%)",
+    label: "Rings & Chains"
+  },
+  "mens-clothing": {
+    emoji: "👔",
+    gradient: "linear-gradient(135deg, #1a3a2a 0%, #102414 100%)",
+    label: "Style for Him"
+  },
+  "womens-clothing": {
+    emoji: "✨",
+    gradient: "linear-gradient(135deg, #5a1a5a 0%, #3d0f3d 100%)",
+    label: "Style for Her"
+  }
+};
+function getCatMeta(slug) {
+  return CATEGORY_META[slug] ?? {
+    emoji: "🛍️",
+    gradient: "linear-gradient(135deg, #333 0%, #111 100%)",
+    label: "Shop Now"
+  };
+}
 function MegaMenu({ isOpen, onClose }) {
   const { data: categories = [] } = useQuery({
     queryKey: ["categories-with-images"],
     queryFn: getCategoriesWithImages,
     staleTime: 5 * 60 * 1e3
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
     "div",
     {
       className: cn(
-        "absolute left-0 right-0 top-full z-[100] bg-white shadow-lg border-t border-[var(--color-border)]",
+        "absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] z-[100]",
+        "w-[600px] max-w-[calc(100vw-32px)]",
+        "bg-white rounded-2xl border border-[var(--color-border)] shadow-[0_16px_48px_rgba(0,0,0,0.18)]",
         "transition-all duration-200 origin-top",
-        isOpen ? "opacity-100 scale-y-100 pointer-events-auto" : "opacity-0 scale-y-95 pointer-events-none"
+        isOpen ? "opacity-100 scale-100 translate-y-0 pointer-events-auto" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"
       ),
       onMouseLeave: onClose,
-      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-[1280px] mx-auto px-4 py-6", children: [
+      role: "menu",
+      "aria-label": "Category navigation",
+      children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "p",
+          "div",
           {
-            className: "text-xs font-semibold uppercase tracking-wider mb-4",
-            style: { color: "var(--color-text-muted)" },
-            children: "Shop by Category"
+            className: "absolute -top-[7px] left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-l border-t border-[var(--color-border)] rotate-45",
+            "aria-hidden": "true"
           }
         ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-4", children: categories.map((cat) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          Link,
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
           {
-            to: "/category/$categorySlug",
-            params: { categorySlug: cat.slug },
-            onClick: onClose,
-            className: "group flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-[var(--color-surface-alt)] transition-colors duration-200",
-            "data-ocid": `megamenu.category.${cat.slug}`,
+            className: "px-5 pt-4 pb-3 border-b border-[var(--color-border)]",
+            style: { borderBottomColor: "var(--color-border)" },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "p",
+              {
+                className: "text-[11px] font-semibold uppercase tracking-widest",
+                style: { color: "var(--color-text-muted)" },
+                children: "Shop by Category"
+              }
+            )
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-3 p-4", children: categories.map((cat) => {
+          const meta = getCatMeta(cat.slug);
+          return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            Link,
+            {
+              to: "/category/$categorySlug",
+              params: { categorySlug: cat.slug },
+              onClick: onClose,
+              className: "group flex flex-col items-center gap-2.5 p-3 rounded-xl border border-transparent hover:border-[var(--color-border)] hover:shadow-[var(--shadow-card)] transition-all duration-200 cursor-pointer",
+              style: {
+                "--hover-bg": "var(--color-surface-alt)"
+              },
+              "data-ocid": `megamenu.category.${cat.slug}`,
+              role: "menuitem",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    className: "relative w-[72px] h-[72px] rounded-2xl overflow-hidden flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-200 shadow-[var(--shadow-sm)]",
+                    style: { background: meta.gradient },
+                    children: [
+                      cat.image ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "img",
+                        {
+                          src: cat.image,
+                          alt: "",
+                          "aria-hidden": "true",
+                          className: "absolute inset-0 w-full h-full object-cover opacity-40"
+                        }
+                      ) : null,
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "span",
+                        {
+                          className: "relative z-10 text-3xl leading-none select-none",
+                          role: "img",
+                          "aria-label": cat.name,
+                          children: meta.emoji
+                        }
+                      )
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-1 min-w-0 w-full", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "text-[13px] font-semibold text-center leading-tight truncate w-full group-hover:text-[var(--color-accent)] transition-colors duration-200",
+                      style: { color: "var(--color-text-primary)" },
+                      children: cat.name
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "span",
+                    {
+                      className: "text-[11px] font-medium",
+                      style: { color: "var(--color-text-muted)" },
+                      children: meta.label
+                    }
+                  )
+                ] }),
+                cat.productCount !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "span",
+                  {
+                    className: "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold",
+                    style: {
+                      backgroundColor: "var(--color-surface-alt)",
+                      color: "var(--color-text-secondary)"
+                    },
+                    children: [
+                      cat.productCount,
+                      " items"
+                    ]
+                  }
+                )
+              ]
+            },
+            cat.id
+          );
+        }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            className: "px-5 py-3 border-t border-[var(--color-border)] flex items-center justify-between",
+            style: { backgroundColor: "var(--color-surface-alt)" },
             children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-16 h-16 rounded-lg overflow-hidden bg-[var(--color-surface-alt)] flex items-center justify-center shrink-0", children: cat.image ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "img",
-                {
-                  src: cat.image,
-                  alt: cat.name,
-                  className: "w-full h-full object-contain p-1 group-hover:scale-105 transition-transform duration-200"
-                }
-              ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-full bg-[var(--color-surface-alt)]" }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 "span",
                 {
-                  className: "text-sm font-medium text-center leading-tight group-hover:text-[var(--color-accent)] transition-colors duration-200",
-                  style: { color: "var(--color-text-primary)" },
-                  children: cat.name
+                  className: "text-[12px]",
+                  style: { color: "var(--color-text-muted)" },
+                  children: [
+                    "Browse all",
+                    " ",
+                    categories.reduce((s, c) => s + (c.productCount ?? 0), 0),
+                    " products"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                Link,
+                {
+                  to: "/products",
+                  onClick: onClose,
+                  className: "flex items-center gap-1 text-[12px] font-semibold transition-colors duration-200 group/link",
+                  style: { color: "var(--color-accent)" },
+                  "data-ocid": "megamenu.view_all_link",
+                  children: [
+                    "View All",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      ChevronRight,
+                      {
+                        size: 13,
+                        className: "group-hover/link:translate-x-0.5 transition-transform duration-200"
+                      }
+                    )
+                  ]
                 }
               )
             ]
-          },
-          cat.id
-        )) })
-      ] })
+          }
+        )
+      ]
     }
-  );
+  ) });
 }
 function Input({ className, type, ...props }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -34677,6 +35035,114 @@ function Slider({
     }
   );
 }
+const DISCOUNT_SEEDS = [
+  0,
+  10,
+  15,
+  20,
+  25,
+  30,
+  0,
+  40,
+  0,
+  10,
+  20,
+  0,
+  35,
+  15,
+  0,
+  10,
+  30,
+  20,
+  0,
+  25
+];
+function extractBrand(title) {
+  return title.split(" ")[0];
+}
+function mapProduct(p, index2 = 0) {
+  const discount = DISCOUNT_SEEDS[index2 % DISCOUNT_SEEDS.length];
+  const originalPrice = discount > 0 ? Number.parseFloat((p.price / (1 - discount / 100)).toFixed(2)) : void 0;
+  return {
+    id: p.id,
+    title: p.title,
+    slug: String(p.id),
+    price: p.price,
+    originalPrice,
+    description: p.description,
+    category: p.category,
+    image: p.image,
+    images: [p.image],
+    rating: p.rating,
+    stock: 10 + p.id * 17 % 90,
+    // deterministic 10-100
+    brand: extractBrand(p.title),
+    tags: [p.category],
+    isFeatured: index2 < 8,
+    isNew: index2 % 5 === 0,
+    discount: discount > 0 ? discount : void 0
+  };
+}
+function slugToCategory(slug) {
+  if (!slug) return "";
+  if (MOCK_CATEGORIES.includes(slug)) return slug;
+  const lower = slug.toLowerCase();
+  const direct = MOCK_CATEGORIES.find((c) => c.toLowerCase() === lower);
+  if (direct) return direct;
+  const spaced = lower.replace(/-/g, " ");
+  const spacedMatch = MOCK_CATEGORIES.find((c) => c.toLowerCase() === spaced);
+  if (spacedMatch) return spacedMatch;
+  const withApostrophe = spaced.replace(/\b(\w+)s\b(?=\s)/g, (match, stem) => {
+    const candidate = `${stem}'s`;
+    const full = spaced.replace(match, candidate);
+    return MOCK_CATEGORIES.some((c) => c.toLowerCase() === full) ? candidate : match;
+  });
+  const apostropheMatch = MOCK_CATEGORIES.find(
+    (c) => c.toLowerCase() === withApostrophe
+  );
+  if (apostropheMatch) return apostropheMatch;
+  const SLUG_MAP = {
+    electronics: "electronics",
+    jewelery: "jewelery",
+    jewellery: "jewelery",
+    jewelry: "jewelery",
+    "mens clothing": "men's clothing",
+    "mens-clothing": "men's clothing",
+    "men-s-clothing": "men's clothing",
+    "men's-clothing": "men's clothing",
+    "men's clothing": "men's clothing",
+    "womens clothing": "women's clothing",
+    "womens-clothing": "women's clothing",
+    "women-s-clothing": "women's clothing",
+    "women's-clothing": "women's clothing",
+    "women's clothing": "women's clothing"
+  };
+  return SLUG_MAP[lower] ?? SLUG_MAP[spaced] ?? slug;
+}
+function getProductsSync() {
+  return MOCK_PRODUCTS.map((p, i) => mapProduct(p, i));
+}
+function getProductByIdSync(id) {
+  const numId = typeof id === "string" ? Number.parseInt(id, 10) : id;
+  const found = MOCK_PRODUCTS.find((p) => p.id === numId);
+  if (!found) return null;
+  return mapProduct(found, found.id - 1);
+}
+function getProductsByCategorySync(categoryOrSlug) {
+  const canon = slugToCategory(categoryOrSlug);
+  return MOCK_PRODUCTS.filter(
+    (p) => p.category.toLowerCase() === canon.toLowerCase()
+  ).map((p, i) => mapProduct(p, i));
+}
+function getCategoriesSync() {
+  return [...MOCK_CATEGORIES];
+}
+async function getProducts() {
+  return getProductsSync();
+}
+async function getCategories() {
+  return getCategoriesSync();
+}
 const DEFAULT_FILTERS = {
   category: [],
   priceMin: 0,
@@ -34688,15 +35154,23 @@ const DEFAULT_FILTERS = {
   discount: []
 };
 function parseArrayParam(value) {
-  if (!value) return [];
+  if (!value || typeof value !== "string") return [];
   return value.split(",").filter(Boolean);
 }
 function parseNumberArrayParam(value) {
-  if (!value) return [];
+  if (!value || typeof value !== "string") return [];
   return value.split(",").filter(Boolean).map(Number);
 }
+function pushSearchParams(params) {
+  const url = new URL(window.location.href);
+  url.search = "";
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+  window.history.replaceState(null, "", url.toString());
+}
 function useFilters() {
-  const navigate = useNavigate();
+  const router2 = useRouter();
   const raw = useSearch({ strict: false });
   const filters = {
     category: parseArrayParam(raw.category),
@@ -34723,13 +35197,15 @@ function useFilters() {
       if (next.brands.length) params.brands = next.brands.join(",");
       if (next.inStock) params.inStock = "true";
       if (next.discount.length) params.discount = next.discount.join(",");
-      void navigate({ to: ".", search: params });
+      pushSearchParams(params);
+      void router2.invalidate();
     },
-    [navigate]
+    [router2]
   );
   const clearFilters = reactExports.useCallback(() => {
-    void navigate({ to: ".", search: {} });
-  }, [navigate]);
+    pushSearchParams({});
+    void router2.invalidate();
+  }, [router2]);
   return { filters, setFilters, clearFilters };
 }
 function buildActiveChips(filters, setFilters) {
@@ -35038,9 +35514,9 @@ function ProductFilters({ mobileOnly = false }) {
     )
   ] });
 }
-const PLACEHOLDER_SVG$3 = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E";
-function handleImgError$3(e) {
-  e.target.src = PLACEHOLDER_SVG$3;
+const PLACEHOLDER_SVG$2 = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='16'%3ENo Image%3C/text%3E%3C/svg%3E";
+function handleImgError$2(e) {
+  e.target.src = PLACEHOLDER_SVG$2;
 }
 function StarRating({ rate, count: count2 }) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
@@ -35103,7 +35579,7 @@ function ProductCard({
                     alt: product.title,
                     loading: "lazy",
                     className: "w-full h-full object-contain p-4 transition-transform duration-300 group-hover:scale-105",
-                    onError: handleImgError$3
+                    onError: handleImgError$2
                   }
                 ),
                 badge && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -35301,33 +35777,35 @@ const SORT_OPTIONS$1 = [
   { value: "rating", label: "Top Rated" },
   { value: "newest", label: "Newest" }
 ];
-function formatCategoryName(slug) {
-  return slug.split(/[-_\s]/).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+function capitalize(str) {
+  return str.split(" ").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 const CATEGORY_GRADIENTS = {
-  electronics: "linear-gradient(135deg, var(--color-primary), var(--color-secondary))",
-  jewelery: "linear-gradient(135deg, var(--color-secondary), var(--color-primary-hover))",
-  "men's clothing": "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))",
-  "women's clothing": "linear-gradient(135deg, var(--color-accent-hover), var(--color-secondary))"
+  electronics: "linear-gradient(135deg, #1e3a5f, #2563eb)",
+  jewelery: "linear-gradient(135deg, #5c3a00, #b45309)",
+  "men's clothing": "linear-gradient(135deg, #1a3a2a, #059669)",
+  "women's clothing": "linear-gradient(135deg, #4a1a4a, #9333ea)"
 };
 function CategoryPage() {
   const { categorySlug } = useParams({ strict: false });
   const { filters, setFilters } = useFilters();
   const [page, setPage] = reactExports.useState(1);
+  const rawCategory = slugToRawCategory(categorySlug ?? "");
+  const categoryName = capitalize(rawCategory || categorySlug || "");
   const {
     data: allProducts = [],
     isLoading,
     error
   } = useQuery({
-    queryKey: ["products", "category", categorySlug],
-    queryFn: () => getProductsByCategory(categorySlug),
-    staleTime: 5 * 60 * 1e3,
+    queryKey: ["products", "category", rawCategory],
+    queryFn: () => getProductsByCategorySync(rawCategory),
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!categorySlug
   });
   const { data: allCategories = [] } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-    staleTime: 5 * 60 * 1e3
+    queryKey: ["categories-list"],
+    queryFn: getCategoriesSync,
+    staleTime: Number.POSITIVE_INFINITY
   });
   const filteredProducts = reactExports.useMemo(
     () => applyFiltersAndSort$1(allProducts, filters),
@@ -35338,8 +35816,7 @@ function CategoryPage() {
     (page - 1) * PAGE_SIZE$1,
     page * PAGE_SIZE$1
   );
-  const categoryName = formatCategoryName(categorySlug ?? "");
-  const heroGradient = CATEGORY_GRADIENTS[(categorySlug ?? "").toLowerCase()] ?? "linear-gradient(135deg, var(--color-primary), var(--color-secondary))";
+  const heroGradient = CATEGORY_GRADIENTS[rawCategory] ?? "linear-gradient(135deg, #1e3a5f, #2563eb)";
   function handleSortChange(e) {
     setFilters({
       ...filters,
@@ -35348,62 +35825,51 @@ function CategoryPage() {
     setPage(1);
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Layout, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-background", "data-ocid": "category.page", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
       "div",
       {
         className: "relative text-white",
         style: { background: heroGradient },
         "data-ocid": "category.hero",
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative max-w-[1280px] mx-auto px-4 py-12 md:py-16", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "nav",
             {
-              className: "absolute inset-0 bg-cover bg-center opacity-10",
-              style: {
-                backgroundImage: "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&q=80')"
-              }
+              className: "flex items-center gap-1.5 text-sm text-white/70 mb-4",
+              "aria-label": "Breadcrumb",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Link,
+                  {
+                    to: "/",
+                    className: "hover:text-white transition-colors",
+                    "data-ocid": "breadcrumb.home_link",
+                    children: "Home"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { size: 14 }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-white font-medium", children: categoryName })
+              ]
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative max-w-[1280px] mx-auto px-4 py-12 md:py-16", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "nav",
-              {
-                className: "flex items-center gap-1.5 text-sm text-white/70 mb-4",
-                "aria-label": "Breadcrumb",
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    Link,
-                    {
-                      to: "/",
-                      className: "hover:text-white transition-colors",
-                      "data-ocid": "breadcrumb.home_link",
-                      children: "Home"
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(ChevronRight, { size: 14 }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-white font-medium", children: categoryName })
-                ]
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "h1",
-              {
-                className: "text-3xl md:text-4xl font-bold mb-2",
-                style: { fontFamily: "var(--font-heading)" },
-                children: categoryName
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-white/80 text-sm md:text-base max-w-md", children: [
-              "Explore our curated selection of ",
-              categoryName.toLowerCase(),
-              " — quality products at great prices."
-            ] }),
-            !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium", children: [
-              filteredProducts.length,
-              " products"
-            ] })
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "h1",
+            {
+              className: "text-3xl md:text-4xl font-bold mb-2",
+              style: { fontFamily: "var(--font-heading)" },
+              children: categoryName
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-white/80 text-sm md:text-base max-w-md", children: [
+            "Explore our curated selection of ",
+            categoryName.toLowerCase(),
+            " — quality products at great prices."
+          ] }),
+          !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-4 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-1.5 text-sm font-medium", children: [
+            filteredProducts.length,
+            " products"
           ] })
-        ]
+        ] })
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-[1280px] mx-auto px-4 py-6", children: [
@@ -35412,17 +35878,21 @@ function CategoryPage() {
         {
           className: "flex flex-wrap gap-2 mb-6",
           "data-ocid": "category.sub_category_pills",
-          children: allCategories.map((cat) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-            Link,
-            {
-              to: "/category/$categorySlug",
-              params: { categorySlug: cat },
-              className: `px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] flex items-center ${cat === categorySlug ? "bg-primary text-primary-foreground shadow-md" : "bg-card border border-border text-foreground hover:border-primary hover:text-primary"}`,
-              "data-ocid": `category.pill.${cat.replace(/\s+/g, "_")}`,
-              children: formatCategoryName(cat)
-            },
-            cat
-          ))
+          children: allCategories.map((cat) => {
+            const catSlug = categoryToSlug(cat);
+            const isActive = catSlug === categorySlug || cat === rawCategory;
+            return /* @__PURE__ */ jsxRuntimeExports.jsx(
+              Link,
+              {
+                to: "/category/$categorySlug",
+                params: { categorySlug: catSlug },
+                className: `px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[44px] flex items-center ${isActive ? "bg-primary text-primary-foreground shadow-md" : "bg-card border border-border text-foreground hover:border-primary hover:text-primary"}`,
+                "data-ocid": `category.pill.${catSlug}`,
+                children: capitalize(cat)
+              },
+              cat
+            );
+          })
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-6 items-start", children: [
@@ -35531,8 +36001,13 @@ function CategoryPage() {
     ] })
   ] }) });
 }
+async function apiPost(_path, _body) {
+  throw new Error(
+    "apiPost() is disabled — external API calls are blocked on this platform. Use mock data functions instead."
+  );
+}
 async function postContactForm(data) {
-  await apiPost("/posts", data);
+  await apiPost();
   return { success: true };
 }
 function isValidEmail(email) {
@@ -36214,18 +36689,27 @@ function ContactPage() {
     ] }) })
   ] });
 }
-const PLACEHOLDER_SVG$2 = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='16'%3ECategory%3C/text%3E%3C/svg%3E";
-function handleImgError$2(e) {
-  e.target.src = PLACEHOLDER_SVG$2;
-}
+const CATEGORY_BG = {
+  electronics: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+  jewelery: "linear-gradient(135deg, #5c3a00 0%, #b45309 100%)",
+  "men's clothing": "linear-gradient(135deg, #1a3a2a 0%, #059669 100%)",
+  "women's clothing": "linear-gradient(135deg, #4a1a4a 0%, #9333ea 100%)"
+};
+const CATEGORY_EMOJI = {
+  electronics: "💻",
+  jewelery: "💎",
+  "men's clothing": "👔",
+  "women's clothing": "👗"
+};
 function CategorySection() {
   const {
     data: categories,
     isLoading,
     isError
   } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategoriesWithImages
+    queryKey: ["categories-with-images"],
+    queryFn: getCategoriesWithImages,
+    staleTime: Number.POSITIVE_INFINITY
   });
   return /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "py-14 bg-background", "data-ocid": "categories.section", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-8", children: [
@@ -36254,10 +36738,17 @@ function CategorySection() {
         }
       )
     ] }),
-    isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-6", children: [1, 2, 3, 4].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-3", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "w-24 h-24 rounded-full" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Skeleton, { className: "h-4 w-20 rounded" })
-    ] }, i)) }),
+    isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-6", children: [1, 2, 3, 4].map((i) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "flex flex-col items-center gap-3 animate-pulse",
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-24 h-24 rounded-2xl bg-muted" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-4 w-20 rounded bg-muted" })
+        ]
+      },
+      i
+    )) }),
     isError && /* @__PURE__ */ jsxRuntimeExports.jsx(
       "p",
       {
@@ -36266,29 +36757,35 @@ function CategorySection() {
         children: "Failed to load categories. Please try again."
       }
     ),
-    categories && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0", children: categories.map((category) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-      Link,
-      {
-        to: "/category/$categorySlug",
-        params: { categorySlug: category.slug },
-        className: "group flex flex-col items-center gap-3 flex-shrink-0 snap-start sm:flex-shrink w-28 sm:w-auto",
-        "data-ocid": `categories.item.${category.id}`,
-        children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border bg-muted transition-all duration-300 group-hover:shadow-lg group-hover:scale-105 group-hover:border-accent", children: category.image ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "img",
+    categories && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6", children: categories.map((category) => {
+      const bg = CATEGORY_BG[category.id] ?? "linear-gradient(135deg, #374151, #6b7280)";
+      const emoji = CATEGORY_EMOJI[category.id] ?? "🛍️";
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Link,
+        {
+          to: "/category/$categorySlug",
+          params: { categorySlug: category.slug },
+          className: "group flex flex-col items-center gap-3",
+          "data-ocid": `categories.item.${category.id.replace(/\s+/g, "_")}`,
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
             {
-              src: category.image,
-              alt: category.name,
-              loading: "lazy",
-              className: "w-full h-full object-contain p-2",
-              onError: handleImgError$2
+              className: "relative w-full aspect-square rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-[1.03] flex flex-col items-center justify-center gap-2 px-3 py-4",
+              style: { background: bg },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-4xl sm:text-5xl drop-shadow-md", children: emoji }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-white font-bold text-sm sm:text-base text-center leading-tight drop-shadow", children: category.name }),
+                category.productCount !== void 0 && /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-white/75 text-xs font-medium", children: [
+                  category.productCount,
+                  " items"
+                ] })
+              ]
             }
-          ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-full flex items-center justify-center text-2xl", children: "🛍️" }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm font-medium text-foreground text-center leading-tight group-hover:text-accent transition-colors", children: category.name })
-        ]
-      },
-      category.id
-    )) }),
+          )
+        },
+        category.id
+      );
+    }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-6 flex justify-center sm:hidden", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
       Link,
       {
@@ -38270,12 +38767,14 @@ function ProductDetailPage() {
     isError
   } = useQuery({
     queryKey: ["product", productId],
-    queryFn: () => getProductById(productId ?? ""),
+    queryFn: () => productId ? getProductByIdSync(productId) : null,
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!productId
   });
   const { data: relatedProducts = [] } = useQuery({
     queryKey: ["products-category", product == null ? void 0 : product.category],
-    queryFn: () => getProductsByCategory((product == null ? void 0 : product.category) ?? ""),
+    queryFn: () => (product == null ? void 0 : product.category) ? getProductsByCategorySync(product.category) : [],
+    staleTime: Number.POSITIVE_INFINITY,
     enabled: !!(product == null ? void 0 : product.category)
   });
   const filteredRelated = relatedProducts.filter((p) => p.id !== (product == null ? void 0 : product.id)).slice(0, 6);
@@ -38676,8 +39175,8 @@ function ProductsPage() {
     error
   } = useQuery({
     queryKey: ["products"],
-    queryFn: getProducts,
-    staleTime: 5 * 60 * 1e3
+    queryFn: getProductsSync,
+    staleTime: Number.POSITIVE_INFINITY
   });
   const filteredProducts = reactExports.useMemo(
     () => applyFiltersAndSort(allProducts, filters),
@@ -38855,6 +39354,13 @@ function ProductsPage() {
     ] })
   ] }) }) });
 }
+function validateSearch(search) {
+  const result = {};
+  for (const [k, v2] of Object.entries(search)) {
+    if (typeof v2 === "string") result[k] = v2;
+  }
+  return result;
+}
 const rootRoute = createRootRoute({
   component: () => /* @__PURE__ */ jsxRuntimeExports.jsx(Outlet, {})
 });
@@ -38866,7 +39372,8 @@ const homeRoute = createRoute({
 const productsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/products",
-  component: ProductsPage
+  component: ProductsPage,
+  validateSearch
 });
 const productDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -38876,7 +39383,8 @@ const productDetailRoute = createRoute({
 const categoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/category/$categorySlug",
-  component: CategoryPage
+  component: CategoryPage,
+  validateSearch
 });
 const cartRoute = createRoute({
   getParentRoute: () => rootRoute,

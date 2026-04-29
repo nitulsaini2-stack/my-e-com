@@ -1,15 +1,22 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { getCategoriesWithImages } from "../../lib/api/categories";
 
-const PLACEHOLDER_SVG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='16'%3ECategory%3C/text%3E%3C/svg%3E";
+// Category color themes for visual distinction — no external images needed
+const CATEGORY_BG: Record<string, string> = {
+  electronics: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
+  jewelery: "linear-gradient(135deg, #5c3a00 0%, #b45309 100%)",
+  "men's clothing": "linear-gradient(135deg, #1a3a2a 0%, #059669 100%)",
+  "women's clothing": "linear-gradient(135deg, #4a1a4a 0%, #9333ea 100%)",
+};
 
-function handleImgError(e: React.SyntheticEvent<HTMLImageElement>) {
-  (e.target as HTMLImageElement).src = PLACEHOLDER_SVG;
-}
+const CATEGORY_EMOJI: Record<string, string> = {
+  electronics: "💻",
+  jewelery: "💎",
+  "men's clothing": "👔",
+  "women's clothing": "👗",
+};
 
 export function CategorySection() {
   const {
@@ -17,8 +24,9 @@ export function CategorySection() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories-with-images"],
     queryFn: getCategoriesWithImages,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   return (
@@ -47,13 +55,16 @@ export function CategorySection() {
           </Link>
         </div>
 
-        {/* Loading */}
+        {/* Loading skeleton */}
         {isLoading && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col items-center gap-3">
-                <Skeleton className="w-24 h-24 rounded-full" />
-                <Skeleton className="h-4 w-20 rounded" />
+              <div
+                key={i}
+                className="flex flex-col items-center gap-3 animate-pulse"
+              >
+                <div className="w-24 h-24 rounded-2xl bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
               </div>
             ))}
           </div>
@@ -69,37 +80,41 @@ export function CategorySection() {
           </p>
         )}
 
-        {/* Categories grid */}
+        {/* Categories grid — using inline gradients + emoji, zero external deps */}
         {categories && (
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory sm:grid sm:grid-cols-4 sm:overflow-visible sm:pb-0">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                to="/category/$categorySlug"
-                params={{ categorySlug: category.slug }}
-                className="group flex flex-col items-center gap-3 flex-shrink-0 snap-start sm:flex-shrink w-28 sm:w-auto"
-                data-ocid={`categories.item.${category.id}`}
-              >
-                <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border bg-muted transition-all duration-300 group-hover:shadow-lg group-hover:scale-105 group-hover:border-accent">
-                  {category.image ? (
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      loading="lazy"
-                      className="w-full h-full object-contain p-2"
-                      onError={handleImgError}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">
-                      🛍️
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm font-medium text-foreground text-center leading-tight group-hover:text-accent transition-colors">
-                  {category.name}
-                </span>
-              </Link>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+            {categories.map((category) => {
+              const bg =
+                CATEGORY_BG[category.id] ??
+                "linear-gradient(135deg, #374151, #6b7280)";
+              const emoji = CATEGORY_EMOJI[category.id] ?? "🛍️";
+              return (
+                <Link
+                  key={category.id}
+                  to="/category/$categorySlug"
+                  params={{ categorySlug: category.slug }}
+                  className="group flex flex-col items-center gap-3"
+                  data-ocid={`categories.item.${category.id.replace(/\s+/g, "_")}`}
+                >
+                  <div
+                    className="relative w-full aspect-square rounded-2xl overflow-hidden transition-all duration-300 group-hover:shadow-xl group-hover:scale-[1.03] flex flex-col items-center justify-center gap-2 px-3 py-4"
+                    style={{ background: bg }}
+                  >
+                    <span className="text-4xl sm:text-5xl drop-shadow-md">
+                      {emoji}
+                    </span>
+                    <span className="text-white font-bold text-sm sm:text-base text-center leading-tight drop-shadow">
+                      {category.name}
+                    </span>
+                    {category.productCount !== undefined && (
+                      <span className="text-white/75 text-xs font-medium">
+                        {category.productCount} items
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         )}
 

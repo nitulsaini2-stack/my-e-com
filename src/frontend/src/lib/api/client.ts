@@ -1,18 +1,15 @@
-const BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string) || "https://fakestoreapi.com";
+// API client — kept for interface compatibility.
+// External HTTP calls (e.g. fakestoreapi.com) are BLOCKED on the Internet Computer
+// platform. All data comes from local mock data in mockData.ts via products.ts / categories.ts.
 
-export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`);
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json() as Promise<T>;
+export async function apiGet<T>(_path: string): Promise<T> {
+  throw new Error(
+    "apiGet() is disabled — external API calls are blocked on this platform. Use mock data functions instead.",
+  );
 }
 
-export async function apiPost<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json() as Promise<T>;
+export async function apiPost<T>(_path: string, _body: unknown): Promise<T> {
+  throw new Error(
+    "apiPost() is disabled — external API calls are blocked on this platform. Use mock data functions instead.",
+  );
 }

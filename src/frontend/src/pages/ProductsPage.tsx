@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { ProductFilters } from "../components/product/ProductFilters";
 import { ProductGrid } from "../components/product/ProductGrid";
-import { getProducts } from "../lib/api/products";
+import { getProductsSync } from "../lib/api/products";
 import { useFilters } from "../lib/hooks/useFilters";
 import type { FilterState, Product } from "../types";
 
@@ -29,7 +29,7 @@ function applyFiltersAndSort(
   }
 
   if (filters.rating !== null) {
-    result = result.filter((p) => p.rating.rate >= filters.rating!);
+    result = result.filter((p) => p.rating.rate >= (filters.rating as number));
   }
 
   if (filters.inStock) {
@@ -70,14 +70,16 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
+  // Synchronous data — use queryFn that returns synchronously
+  // staleTime: Infinity means data is never re-fetched (it's static mock data)
   const {
     data: allProducts = [],
     isLoading,
     error,
   } = useQuery({
     queryKey: ["products"],
-    queryFn: getProducts,
-    staleTime: 5 * 60 * 1000,
+    queryFn: getProductsSync,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 
   const filteredProducts = useMemo(
