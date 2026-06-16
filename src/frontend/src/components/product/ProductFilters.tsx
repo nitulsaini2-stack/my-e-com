@@ -52,7 +52,7 @@ function buildActiveChips(
       onRemove: () => setFilters({ ...filters, inStock: false }),
     });
   }
-
+cloths
   return chips;
 }
 
